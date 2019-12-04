@@ -149,69 +149,6 @@
 // Generally expected filament diameter (1.75, 2.85, 3.0, ...). Used for Volumetric, Filament Width Sensor, etc.
 #define DEFAULT_NOMINAL_FILAMENT_DIA 1.75
 
-#define DELTA
-
-#if ENABLED(DELTA)
-
-// Make delta curves from many straight lines (linear interpolation).
-// This is a trade-off between visible corners (not enough segments)
-// and processor overload (too many expensive sqrt calls).
-#define DELTA_SEGMENTS_PER_SECOND 160
-
-// After homing move down to a height where XY movement is unconstrained
-//#define DELTA_HOME_TO_SAFE_ZONE
-
-// Delta calibration menu
-// uncomment to add three points calibration menu option.
-// See http://minow.blogspot.com/index.html#4918805519571907051
-//#define DELTA_CALIBRATION_MENU
-
-// uncomment to add G33 Delta Auto-Calibration (Enable EEPROM_SETTINGS to store results)
-//#define DELTA_AUTO_CALIBRATION
-
-// NOTE NB all values for DELTA_* values MUST be floating point, so always have a decimal point in them
-
-#if ENABLED(DELTA_AUTO_CALIBRATION)
-// set the default number of probe points : n*n (1 -> 7)
-#define DELTA_CALIBRATION_DEFAULT_POINTS 4
-#endif
-
-#if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
-// Set the steprate for papertest probing
-#define PROBE_MANUALLY_STEP 0.05 // (mm)
-#endif
-
-// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
-#define DELTA_PRINTABLE_RADIUS 85.0 // (mm)
-
-// Center-to-center distance of the holes in the diagonal push rods.
-#define DELTA_DIAGONAL_ROD 218.0 // (mm)
-
-// Distance between bed and nozzle Z home position
-#define DELTA_HEIGHT 280.00 // (mm) Get this value from G33 auto calibrate
-
-#define DELTA_ENDSTOP_ADJ \
-  {                       \
-    0.0, 0.0, 0.0         \
-  } // Get these values from G33 auto calibrate
-
-// Horizontal distance bridged by diagonal push rods when effector is centered.
-#define DELTA_RADIUS 101.0 // (mm) Get this value from G33 auto calibrate
-
-// Trim adjustments for individual towers
-// tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
-// measured in degrees anticlockwise looking from above the printer
-#define DELTA_TOWER_ANGLE_TRIM \
-  {                            \
-    0.0, 0.0, 0.0              \
-  } // Get these values from G33 auto calibrate
-
-// Delta radius and diagonal rod adjustments (mm)
-//#define DELTA_RADIUS_TRIM_TOWER { 0.0, 0.0, 0.0 }
-//#define DELTA_DIAGONAL_ROD_TRIM_TOWER { 0.0, 0.0, 0.0 }
-
-#endif
-
 // For Cyclops or any "multi-extruder" that shares a single nozzle.
 //#define SINGLENOZZLE
 
@@ -667,7 +604,68 @@
 //#define COREZX
 //#define COREZY
 
+#define DELTA
 
+#if ENABLED(DELTA)
+
+// Make delta curves from many straight lines (linear interpolation).
+// This is a trade-off between visible corners (not enough segments)
+// and processor overload (too many expensive sqrt calls).
+#define DELTA_SEGMENTS_PER_SECOND 160
+
+// After homing move down to a height where XY movement is unconstrained
+//#define DELTA_HOME_TO_SAFE_ZONE
+
+// Delta calibration menu
+// uncomment to add three points calibration menu option.
+// See http://minow.blogspot.com/index.html#4918805519571907051
+//#define DELTA_CALIBRATION_MENU
+
+// uncomment to add G33 Delta Auto-Calibration (Enable EEPROM_SETTINGS to store results)
+//#define DELTA_AUTO_CALIBRATION
+
+// NOTE NB all values for DELTA_* values MUST be floating point, so always have a decimal point in them
+
+#if ENABLED(DELTA_AUTO_CALIBRATION)
+// set the default number of probe points : n*n (1 -> 7)
+#define DELTA_CALIBRATION_DEFAULT_POINTS 4
+#endif
+
+#if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
+// Set the steprate for papertest probing
+#define PROBE_MANUALLY_STEP 0.05 // (mm)
+#endif
+
+// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+#define DELTA_PRINTABLE_RADIUS 85.0 // (mm)
+
+// Center-to-center distance of the holes in the diagonal push rods.
+#define DELTA_DIAGONAL_ROD 218.0 // (mm)
+
+// Distance between bed and nozzle Z home position
+#define DELTA_HEIGHT 280.00 // (mm) Get this value from G33 auto calibrate
+
+#define DELTA_ENDSTOP_ADJ \
+  {                       \
+    0.0, 0.0, 0.0         \
+  } // Get these values from G33 auto calibrate
+
+// Horizontal distance bridged by diagonal push rods when effector is centered.
+#define DELTA_RADIUS 101.0 // (mm) Get this value from G33 auto calibrate
+
+// Trim adjustments for individual towers
+// tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
+// measured in degrees anticlockwise looking from above the printer
+#define DELTA_TOWER_ANGLE_TRIM \
+  {                            \
+    0.0, 0.0, 0.0              \
+  } // Get these values from G33 auto calibrate
+
+// Delta radius and diagonal rod adjustments (mm)
+//#define DELTA_RADIUS_TRIM_TOWER { 0.0, 0.0, 0.0 }
+//#define DELTA_DIAGONAL_ROD_TRIM_TOWER { 0.0, 0.0, 0.0 }
+
+#endif
 
 //===========================================================================
 //============================== Endstop Settings ===========================
@@ -680,7 +678,7 @@
 // extra connectors. Leave undefined any used for non-endstop and non-probe purposes.
 // #define USE_XMIN_PLUG
 // #define USE_YMIN_PLUG
-// #define USE_ZMIN_PLUG
+#define USE_ZMIN_PLUG
 #define USE_XMAX_PLUG
 #define USE_YMAX_PLUG
 #define USE_ZMAX_PLUG
@@ -897,7 +895,7 @@
  *
  * Enable this option for a probe connected to the Z Min endstop pin.
  */
-//#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+// #define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
 
 /**
  * Z_MIN_PROBE_PIN
@@ -1134,9 +1132,9 @@
 // @section machine
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
-#define INVERT_X_DIR false
-#define INVERT_Y_DIR false
-#define INVERT_Z_DIR false
+#define INVERT_X_DIR true // DELTA does not invert
+#define INVERT_Y_DIR true
+#define INVERT_Z_DIR true
 
 // @section extruder
 
@@ -1417,8 +1415,8 @@
 
 // Manually set the home position. Leave these undefined for automatic settings.
 // For DELTA this is the top-center of the Cartesian print volume.
-#define MANUAL_X_HOME_POS 0
-#define MANUAL_Y_HOME_POS 0
+// #define MANUAL_X_HOME_POS 0
+// #define MANUAL_Y_HOME_POS 0
 #define MANUAL_Z_HOME_POS DELTA_HEIGHT // Distance between the nozzle to printbed after homing
 
 // Use "Z Safe Homing" to avoid homing with a Z probe outside the bed area.
@@ -1551,12 +1549,12 @@
 
 // Preheat Constants
 #define PREHEAT_1_LABEL       "PLA"
-#define PREHEAT_1_TEMP_HOTEND 180
+#define PREHEAT_1_TEMP_HOTEND 200
 #define PREHEAT_1_TEMP_BED     70
 #define PREHEAT_1_FAN_SPEED     0 // Value from 0 to 255
 
 #define PREHEAT_2_LABEL       "ABS"
-#define PREHEAT_2_TEMP_HOTEND 240
+#define PREHEAT_2_TEMP_HOTEND 220
 #define PREHEAT_2_TEMP_BED    100
 #define PREHEAT_2_FAN_SPEED     0 // Value from 0 to 255
 
@@ -2062,7 +2060,7 @@
 // This is RAMPS-compatible using a single 10-pin connector.
 // (For CR-10 owners who want to replace the Melzi Creality board but retain the display)
 //
-#define CR10_STOCKDISPLAY
+// #define CR10_STOCKDISPLAY
 
 //
 // ANET and Tronxy Graphical Controller
