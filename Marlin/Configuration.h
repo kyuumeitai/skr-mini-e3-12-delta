@@ -22,6 +22,21 @@
 #pragma once
 
 /**
+ * Choose your version:
+ */
+// normal size or plus?
+#define ANYCUBIC_KOSSEL_PLUS
+
+// Anycubic Probe version 1 or 2 see README.md; 0 for no probe
+#define ANYCUBIC_PROBE_VERSION 2
+
+// Heated Bed:
+// 0 ... no heated bed
+// 1 ... aluminium heated bed with "BuildTak-like" sticker
+// 2 ... ultrabase heated bed
+#define ANYCUBIC_KOSSEL_ENABLE_BED 1
+
+/**
  * Configuration.h
  *
  * Basic settings such as:
@@ -566,7 +581,7 @@
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
 #define PREVENT_LENGTHY_EXTRUDE
-#define EXTRUDE_MAXLENGTH 300
+#define EXTRUDE_MAXLENGTH 750
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
@@ -603,6 +618,10 @@
 //#define COREYX
 //#define COREZX
 //#define COREZY
+//===========================================================================
+//============================== Delta Settings =============================
+//===========================================================================
+// Enable DELTA kinematics and most of the default configuration for Deltas
 
 #define DELTA
 
@@ -610,48 +629,58 @@
 
 // Make delta curves from many straight lines (linear interpolation).
 // This is a trade-off between visible corners (not enough segments)
-// and processor overload (too many expensive sqrt calls).
+  #define DELTA_SEGMENTS_PER_SECOND 80
 #define DELTA_SEGMENTS_PER_SECOND 160
-
+  #define DELTA_HOME_TO_SAFE_ZONE
 // After homing move down to a height where XY movement is unconstrained
 //#define DELTA_HOME_TO_SAFE_ZONE
 
-// Delta calibration menu
+  #define DELTA_CALIBRATION_MENU
 // uncomment to add three points calibration menu option.
-// See http://minow.blogspot.com/index.html#4918805519571907051
+    #define DELTA_AUTO_CALIBRATION
+
 //#define DELTA_CALIBRATION_MENU
 
 // uncomment to add G33 Delta Auto-Calibration (Enable EEPROM_SETTINGS to store results)
 //#define DELTA_AUTO_CALIBRATION
-
+    #define DELTA_CALIBRATION_DEFAULT_POINTS 7
 // NOTE NB all values for DELTA_* values MUST be floating point, so always have a decimal point in them
 
+    // Set the radius for the calibration probe points - max DELTA_PRINTABLE_RADIUS for non-eccentric probes
+    #define DELTA_CALIBRATION_RADIUS DELTA_PRINTABLE_RADIUS - MIN_PROBE_EDGE  // (mm)
 #if ENABLED(DELTA_AUTO_CALIBRATION)
 // set the default number of probe points : n*n (1 -> 7)
 #define DELTA_CALIBRATION_DEFAULT_POINTS 4
 #endif
-
-#if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
-// Set the steprate for papertest probing
+  #if ENABLED(ANYCUBIC_KOSSEL_PLUS)
+    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+    #define DELTA_PRINTABLE_RADIUS 116.0  // (mm)
+    // Center-to-center distance of the holes in the diagonal push rods.
+    #define DELTA_DIAGONAL_ROD 267        // (mm)
+      // Horizontal offset from middle of printer to smooth rod center.
+    #define DELTA_SMOOTH_ROD_OFFSET 186   // (mm)
+    // Horizontal offset of the universal joints on the end effector.
+    #define DELTA_EFFECTOR_OFFSET 31      // (mm)
+    // Horizontal offset of the universal joints on the carriages.
+    #define DELTA_CARRIAGE_OFFSET 20.6    // (mm)
+    // Horizontal distance bridged by diagonal push rods when effector is centered.
+    #define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))          // (mm) Get this value from G33 auto calibrate
+  #else
+    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+    #define DELTA_PRINTABLE_RADIUS 90.0   // (mm)
 #define PROBE_MANUALLY_STEP 0.05 // (mm)
+    // Horizontal distance bridged by diagonal push rods when effector is centered.
+    #define DELTA_RADIUS 97.0             // (mm) Get this value from G33 auto calibrate
+  #endif
 #endif
 
-// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
-#define DELTA_PRINTABLE_RADIUS 85.0 // (mm)
+  #define DELTA_HEIGHT 300.00             // (mm) Get this value from G33 auto calibrate
 
-// Center-to-center distance of the holes in the diagonal push rods.
-#define DELTA_DIAGONAL_ROD 218.0 // (mm)
-
-// Distance between bed and nozzle Z home position
-#define DELTA_HEIGHT 280.00 // (mm) Get this value from G33 auto calibrate
-
+  #define DELTA_ENDSTOP_ADJ { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
 #define DELTA_ENDSTOP_ADJ \
   {                       \
     0.0, 0.0, 0.0         \
-  } // Get these values from G33 auto calibrate
-
-// Horizontal distance bridged by diagonal push rods when effector is centered.
-#define DELTA_RADIUS 101.0 // (mm) Get this value from G33 auto calibrate
+  #define DELTA_TOWER_ANGLE_TRIM { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
 
 // Trim adjustments for individual towers
 // tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
@@ -669,7 +698,9 @@
 
 //===========================================================================
 //============================== Endstop Settings ===========================
-//===========================================================================
+#if ANYCUBIC_PROBE_VERSION > 0
+  #define USE_ZMIN_PLUG // a Z probe
+#endif
 
 // @section homing
 
@@ -700,13 +731,13 @@
 //#define ENDSTOPPULLDOWNS
 #if DISABLED(ENDSTOPPULLDOWNS)
   // Disable ENDSTOPPULLDOWNS to set pulldowns individually
-  //#define ENDSTOPPULLDOWN_XMAX
-  //#define ENDSTOPPULLDOWN_YMAX
-  //#define ENDSTOPPULLDOWN_ZMAX
-  //#define ENDSTOPPULLDOWN_XMIN
-  //#define ENDSTOPPULLDOWN_YMIN
-  //#define ENDSTOPPULLDOWN_ZMIN
-  //#define ENDSTOPPULLDOWN_ZMIN_PROBE
+#define X_MIN_ENDSTOP_INVERTING false  // set to true to invert the logic of the endstop.
+#define Y_MIN_ENDSTOP_INVERTING false  // set to true to invert the logic of the endstop.
+#define Z_MIN_ENDSTOP_INVERTING (ANYCUBIC_PROBE_VERSION + 0 == 1) // V1 is NO, V2 is NC
+#define X_MAX_ENDSTOP_INVERTING false  // set to true to invert the logic of the endstop.
+#define Y_MAX_ENDSTOP_INVERTING false  // set to true to invert the logic of the endstop.
+#define Z_MAX_ENDSTOP_INVERTING false  // set to true to invert the logic of the endstop.
+#define Z_MIN_PROBE_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
 #endif
 
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
@@ -827,6 +858,14 @@
 #endif
 
 /**
+//
+// Use Junction Deviation instead of traditional Jerk Limiting
+//
+//#define JUNCTION_DEVIATION
+#if ENABLED(JUNCTION_DEVIATION)
+  #define JUNCTION_DEVIATION_MM 0.02  // (mm) Distance from real junction edge
+#endif
+
  * Default Acceleration (change/s) change = mm/s
  * Override with M204
  *
@@ -835,15 +874,16 @@
  *   M204 T    Travel Acceleration
  */
 #define DEFAULT_ACCELERATION          2500    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
+#define CLASSIC_JERK
+#if ENABLED(CLASSIC_JERK)
+  #define DEFAULT_XJERK 10.0
 
 /**
- * Default Jerk limits (mm/s)
- * Override with M205 X Y Z E
- *
- * "Jerk" specifies the minimum speed change that requires acceleration.
- * When changing speed and direction, if the difference is less than the
+
+  //#define LIMITED_JERK_EDITING        // Limit edit via M205 or LCD to DEFAULT_aJERK * 2
+  #if ENABLED(LIMITED_JERK_EDITING)
+    #define MAX_JERK_EDIT_VALUES { 20, 20, 0.6, 10 } // ...or, set your own edit limits
+  #endif
  * value set here, it may happen instantaneously.
  */
 #define CLASSIC_JERK
@@ -883,7 +923,9 @@
 
 //===========================================================================
 //============================= Z Probe Options =============================
-//===========================================================================
+#if ANYCUBIC_PROBE_VERSION > 0
+  #define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+#endif
 // @section probes
 
 //
@@ -914,13 +956,17 @@
  *
  */
 //#define Z_MIN_PROBE_PIN 32 // Pin 32 is the RAMPS default
-
-/**
+#if ANYCUBIC_PROBE_VERSION == 0
+  #define PROBE_MANUALLY
+  #define MANUAL_PROBE_START_Z 1.5
+#endif
  * Probe Type
  *
  * Allen Key Probes, Servo Probes, Z-Sled Probes, FIX_MOUNTED_PROBE, etc.
  * Activate one of these to use Auto Bed Leveling below.
+#if ANYCUBIC_PROBE_VERSION > 0
  */
+#endif
 
 /**
  * The "Manual Probe" provides a means to do "Auto" Bed Leveling without a probe.
@@ -974,22 +1020,34 @@
 // A probe deployed by moving the x-axis, such as the Wilson II's rack-and-pinion probe designed by Marty Rice.
 //#define RACK_AND_PINION_PROBE
 #if ENABLED(RACK_AND_PINION_PROBE)
-  #define Z_PROBE_DEPLOY_X  X_MIN_POS
-  #define Z_PROBE_RETRACT_X X_MAX_POS
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_1_X 30.0
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_1_Y DELTA_PRINTABLE_RADIUS
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_1_Z 100.0
 #endif
-
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_2_X 0.0
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_2_Y DELTA_PRINTABLE_RADIUS
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_2_Z 100.0
 /**
- * Allen key retractable z-probe as seen on many Kossel delta printers - http://reprap.org/wiki/Kossel#Automatic_bed_leveling_probe
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_3_X Z_PROBE_ALLEN_KEY_DEPLOY_2_X * 0.75
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_3_Y Z_PROBE_ALLEN_KEY_DEPLOY_2_Y * 0.75
+  #define Z_PROBE_ALLEN_KEY_DEPLOY_3_Z Z_PROBE_ALLEN_KEY_DEPLOY_2_Z
  * Deploys by touching z-axis belt. Retracts by pushing the probe down. Uses Z_MIN_PIN.
- */
-//#define Z_PROBE_ALLEN_KEY
+  #define Z_PROBE_ALLEN_KEY_STOW_1_X -64.0 // Move the probe into position
+  #define Z_PROBE_ALLEN_KEY_STOW_1_Y 56.0
+  #define Z_PROBE_ALLEN_KEY_STOW_1_Z 23.0
 
-#if ENABLED(Z_PROBE_ALLEN_KEY)
-  // 2 or 3 sets of coordinates for deploying and retracting the spring loaded touch probe on G29,
-  // if servo actuated touch probe is not defined. Uncomment as appropriate for your printer/probe.
+  #define Z_PROBE_ALLEN_KEY_STOW_2_X -64.0 // Push it down
+  #define Z_PROBE_ALLEN_KEY_STOW_2_Y 56.0
+  #define Z_PROBE_ALLEN_KEY_STOW_2_Z 3.0
 
-  // Kossel Mini
-  #define Z_PROBE_ALLEN_KEY_DEPLOY_1 { 30.0, DELTA_PRINTABLE_RADIUS, 100.0 }
+  #define Z_PROBE_ALLEN_KEY_STOW_3_X -64.0 // Move it up to clear
+  #define Z_PROBE_ALLEN_KEY_STOW_3_Y 56.0
+  #define Z_PROBE_ALLEN_KEY_STOW_3_Z 50.0
+  #define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE XY_PROBE_SPEED
+
+  #define Z_PROBE_ALLEN_KEY_STOW_4_X 0.0
+  #define Z_PROBE_ALLEN_KEY_STOW_4_Y 0.0
+  #define Z_PROBE_ALLEN_KEY_STOW_4_Z Z_PROBE_ALLEN_KEY_STOW_3_Z
   #define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE XY_PROBE_SPEED
 
   #define Z_PROBE_ALLEN_KEY_DEPLOY_2 { 0.0, DELTA_PRINTABLE_RADIUS, 100.0 }
@@ -1013,27 +1071,29 @@
 
 #endif // Z_PROBE_ALLEN_KEY
 
-/**
+#define X_PROBE_OFFSET_FROM_EXTRUDER 0     // X offset: -left  +right  [of the nozzle]
+#define Y_PROBE_OFFSET_FROM_EXTRUDER 0     // Y offset: -front +behind [the nozzle]
+
+#if ANYCUBIC_PROBE_VERSION == 2
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -15.7  // Z offset: -below +above  [the nozzle]
+#elif ANYCUBIC_PROBE_VERSION == 1
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -19.0  // Z offset: -below +above  [the nozzle]
+#else
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER   0    // Z offset: -below +above  [the nozzle]
+#endif
  * Z Probe to nozzle (X,Y) offset, relative to (0, 0).
- *
+#define MIN_PROBE_EDGE 15
  * In the following example the X and Y offsets are both positive:
- *
+#define XY_PROBE_SPEED 4000
  *   #define NOZZLE_TO_PROBE_OFFSET { 10, 10, 0 }
  *
  *     +-- BACK ---+
  *     |           |
- *   L |    (+) P  | R <-- probe (20,20)
- *   E |           | I
- *   F | (-) N (+) | G <-- nozzle (10,10)
- *   T |           | H
- *     |    (-)    | T
- *     |           |
- *     O-- FRONT --+
- *   (0,0)
- *
- * Specify a Probe position as { X, Y, Z }
- */
-#define NOZZLE_TO_PROBE_OFFSET { 0, 0, 0.25 }
+#define Z_PROBE_SPEED_SLOW (Z_PROBE_SPEED_FAST / 3)
+// The number of probes to perform at each point.
+//   Set to 2 for a fast/slow probe, using the second probe result.
+//   Set to 3 or more for slow probes, averaging the results.
+//#define MULTIPLE_PROBING 3
 
 // Certain types of probes need to stay away from edges
 #define MIN_PROBE_EDGE 10
@@ -1048,23 +1108,22 @@
 #define Z_PROBE_SPEED_SLOW (Z_PROBE_SPEED_FAST / 2)
 
 /**
- * Multiple Probing
+#define Z_CLEARANCE_DEPLOY_PROBE   30 // Z Clearance for Deploy/Stow
  *
  * You may get improved results by probing 2 or more times.
  * With EXTRA_PROBING the more atypical reading(s) will be disregarded.
  *
  * A total of 2 does fast/slow probes with a weighted average.
  * A total of 3 or more adds more slow probes, taking the average.
- */
+#define Z_PROBE_OFFSET_RANGE_MIN -40
 #define MULTIPLE_PROBING 2
 //#define EXTRA_PROBING    1
+#if ANYCUBIC_PROBE_VERSION > 0
 
+#endif
 /**
  * Z probes require clearance when deploying, stowing, and moving between
  * probe points to avoid hitting the bed and other hardware.
- * Servo-mounted probes require extra space for the arm to rotate.
- * Inductive probes need space to keep from triggering early.
- *
  * Use these settings to specify the distance (mm) to raise the probe (or
  * lower the bed). The values set here apply over and above any (negative)
  * probe Z Offset set with NOZZLE_TO_PROBE_OFFSET, M851, or the LCD.
@@ -1112,7 +1171,7 @@
 // :{ 0:'Low', 1:'High' }
 #define X_ENABLE_ON 0
 #define Y_ENABLE_ON 0
-#define Z_ENABLE_ON 0
+#define INVERT_E0_DIR true
 #define E_ENABLE_ON 0 // For all extruders
 
 // Disables axis stepper immediately when it's not being used.
@@ -1124,7 +1183,7 @@
 // Warn on display about possibly reduced accuracy
 //#define DISABLE_REDUCED_ACCURACY_WARNING
 
-// @section extruder
+//#define Z_HOMING_HEIGHT 4  // (mm) Minimal Z height before homing (G28) for Z clearance above the bed, clamps, ...
 
 #define DISABLE_E false             // For all extruders
 #define DISABLE_INACTIVE_EXTRUDER   // Keep only the active extruder enabled
@@ -1139,12 +1198,12 @@
 // @section extruder
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
+#define X_MIN_POS -(DELTA_PRINTABLE_RADIUS)
+#define Y_MIN_POS -(DELTA_PRINTABLE_RADIUS)
+#define Z_MIN_POS 0
 #define INVERT_E0_DIR false
-#define INVERT_E1_DIR false
 #define INVERT_E2_DIR false
-#define INVERT_E3_DIR false
 #define INVERT_E4_DIR false
-#define INVERT_E5_DIR false
 
 // @section homing
 
@@ -1172,7 +1231,7 @@
 #define X_MIN_POS -(DELTA_PRINTABLE_RADIUS)
 #define Y_MAX_POS DELTA_PRINTABLE_RADIUS
 #define Y_MIN_POS -(DELTA_PRINTABLE_RADIUS)
-#define Z_MAX_POS MANUAL_Z_HOME_POS
+  #define SOFT_ENDSTOPS_MENU_ITEM  // Enable/Disable software endstops from the LCD
 #define Z_MIN_POS 0
 
 /**
@@ -1244,15 +1303,17 @@
 /**
  * Choose one of the options below to enable G29 Bed Leveling. The parameters
  * and behavior of G29 will change depending on your selection.
- *
+#if ANYCUBIC_PROBE_VERSION == 0
+  #define AUTO_BED_LEVELING_3POINT
+#else
  *  If using a Probe for Z Homing, enable Z_SAFE_HOMING also!
  *
  * - AUTO_BED_LEVELING_3POINT
- *   Probe 3 arbitrary points on the bed (that aren't collinear)
+#endif
  *   You specify the XY coordinates of all 3 points.
  *   The result is a single tilted plane. Best for a flat bed.
  *
- * - AUTO_BED_LEVELING_LINEAR
+#define RESTORE_LEVELING_AFTER_G28
  *   Probe several points in a grid.
  *   You specify the rectangle and the density of sample points.
  *   The result is a single tilted plane. Best for a flat bed.
@@ -1264,7 +1325,7 @@
  *
  * - AUTO_BED_LEVELING_UBL (Unified Bed Leveling)
  *   A comprehensive bed leveling system combining the features and benefits
- *   of other systems. UBL also includes integrated Mesh Generation, Mesh
+  #define ENABLE_LEVELING_FADE_HEIGHT
  *   Validation and Mesh Editing systems.
  *
  * - MESH_BED_LEVELING
@@ -1274,10 +1335,10 @@
  *   leveling in steps so you can manually adjust the Z height at each grid-point.
  *   With an LCD controller the process is guided step-by-step.
  */
-//#define AUTO_BED_LEVELING_3POINT
+  #define G26_MESH_VALIDATION
 //#define AUTO_BED_LEVELING_LINEAR
 #define AUTO_BED_LEVELING_BILINEAR
-//#define AUTO_BED_LEVELING_UBL
+    #define MESH_TEST_HOTEND_TEMP  200    // (°C) Default nozzle temperature for the G26 Mesh Validation Tool.
 //#define MESH_BED_LEVELING
 
 /**
@@ -1290,6 +1351,12 @@
  * Enable detailed logging of G28, G29, M48, etc.
  * Turn on with the command 'M111 S32'.
  * NOTE: Requires a lot of PROGMEM!
+  // Set the boundaries for probing (where the probe can reach).
+  #define LEFT_PROBE_BED_POSITION -(DELTA_PRINTABLE_RADIUS -(MIN_PROBE_EDGE))
+  #define RIGHT_PROBE_BED_POSITION DELTA_PRINTABLE_RADIUS -(MIN_PROBE_EDGE)
+  #define FRONT_PROBE_BED_POSITION -(DELTA_PRINTABLE_RADIUS -(MIN_PROBE_EDGE))
+  #define BACK_PROBE_BED_POSITION DELTA_PRINTABLE_RADIUS -(MIN_PROBE_EDGE)
+
  */
 //#define DEBUG_LEVELING_FEATURE
 
@@ -1344,13 +1411,26 @@
       // Number of subdivisions between probe points
       #define BILINEAR_SUBDIVISIONS 3
     #endif
+ * Points to probe for all 3-point Leveling procedures.
+ * Override if the automatically selected points are inadequate.
+ */
+#if EITHER(AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_UBL)
+  #define PROBE_PT_1_X -40
+  #define PROBE_PT_1_Y 60
+  #define PROBE_PT_2_X 40
+  #define PROBE_PT_2_Y 60
+  #define PROBE_PT_3_X 0
+  #define PROBE_PT_3_Y -70
+#endif
+
+/**
 
   #endif
 
 #elif ENABLED(AUTO_BED_LEVELING_UBL)
 
   //===========================================================================
-  //========================= Unified Bed Leveling ============================
+  #define MESH_EDIT_Z_STEP  0.05  // (mm) Step size while manually probing Z axis.
   //===========================================================================
 
   //#define MESH_EDIT_GFX_OVERLAY   // Display a graphics overlay while editing the mesh
@@ -1369,8 +1449,8 @@
 
   //===========================================================================
   //=================================== Mesh ==================================
-  //===========================================================================
-
+//#define Z_PROBE_END_SCRIPT "G1 Z30 X0 Y0 F6000\nG1 Z" STRINGIFY((DELTA_HEIGHT) - 30)
+#define Z_PROBE_END_SCRIPT "G1 X0 Y0 F6000\nG1 Z240\nG28"
   #define MESH_INSET 10          // Set Mesh bounds as an inset region of the bed
   #define GRID_MAX_POINTS_X 3    // Don't use more than 7 points per axis, implementation limited.
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
@@ -1393,11 +1473,11 @@
 
 // Add a menu item to move between bed corners for manual bed adjustment
 //#define LEVEL_BED_CORNERS
-
-#if ENABLED(LEVEL_BED_CORNERS)
+  #define Z_SAFE_HOMING_X_POINT ((X_BED_SIZE) / 2)    // X point for Z homing when homing all axes (G28).
+  #define Z_SAFE_HOMING_Y_POINT ((Y_BED_SIZE) / 2)    // Y point for Z homing when homing all axes (G28).
   #define LEVEL_CORNERS_INSET 30    // (mm) An inset for corner leveling
   #define LEVEL_CORNERS_Z_HOP  4.0  // (mm) Move nozzle up before moving between corners
-  #define LEVEL_CORNERS_HEIGHT 0.0  // (mm) Z height of nozzle at leveling points
+#define HOMING_FEEDRATE_Z  (60*60)
   //#define LEVEL_CENTER_TOO        // Move to the center after the last corner
 #endif
 
@@ -1487,7 +1567,8 @@
   #if ENABLED(SKEW_CORRECTION_FOR_Z)
     #define XZ_DIAG_AC 282.8427124746
     #define XZ_DIAG_BD 282.8427124746
-    #define YZ_DIAG_AC 282.8427124746
+#define DEFAULT_KEEPALIVE_INTERVAL 5  // Number of seconds between "busy" messages. Set with M113.
+
     #define YZ_DIAG_BD 282.8427124746
     #define YZ_SIDE_AD 200
     #define XZ_SKEW_FACTOR 0.0
@@ -1528,10 +1609,11 @@
 //
 #define HOST_KEEPALIVE_FEATURE        // Disable this if your host doesn't like keepalive messages
 #define DEFAULT_KEEPALIVE_INTERVAL 5  // Number of seconds between "busy" messages. Set with M113.
-#define BUSY_WHILE_HEATING            // Some hosts require "busy" messages even during heating
+#define NOZZLE_PARK_FEATURE
 
 //
-// M100 Free Memory Watcher
+  #define NOZZLE_PARK_POINT { (X_MIN_POS + 10), 0, 20 }
+
 //
 //#define M100_FREE_MEMORY_WATCHER    // Add M100 (Free Memory Watcher) to debug memory usage
 
@@ -1595,9 +1677,9 @@
  *
  *   P1  Zig-zag pattern between (X0, Y0) and (X1, Y1), "T" specifies the
  *       number of zig-zag triangles to do. "S" defines the number of strokes.
- *       Zig-zags are done in whichever is the narrower dimension.
- *       For example, "G12 P1 S1 T3" will execute:
- *
+
+  // Enable for a purge/clean station that's always at the gantry height (thus no Z move)
+  //#define NOZZLE_CLEAN_NO_Z
  *          --
  *         |  (X0, Y1) |     /\        /\        /\     | (X1, Y1)
  *         |           |    /  \      /  \      /  \    |
@@ -1671,7 +1753,7 @@
  *  - Total time printing
  *
  * View the current statistics with M78.
- */
+#define DISPLAY_CHARSET_HD44780 JAPANESE
 #define PRINTCOUNTER
 
 //=============================================================================
@@ -1703,7 +1785,7 @@
  *  - JAPANESE ... the most common
  *  - WESTERN  ... with more accented characters
  *  - CYRILLIC ... for the Russian language
- *
+#define SD_CHECK_AND_RETRY
  * To determine the language extension installed on your controller:
  *
  *  - Compile and upload with LCD_LANGUAGE set to 'test'
@@ -1719,12 +1801,12 @@
 /**
  * Info Screen Style (0:Classic, 1:Prusa)
  *
- * :[0:'Classic', 1:'Prusa']
+#define ENCODER_PULSES_PER_STEP 3
  */
 #define LCD_INFO_SCREEN_STYLE 0
 
 /**
- * SD CARD
+#define ENCODER_STEPS_PER_MENU_ITEM 1
  *
  * SD Card support is disabled by default. If your controller has an SD slot,
  * you must uncomment the following option or it won't work.
@@ -1740,22 +1822,14 @@
  */
 //#define SPI_SPEED SPI_HALF_SPEED
 //#define SPI_SPEED SPI_QUARTER_SPEED
-//#define SPI_SPEED SPI_EIGHTH_SPEED
+#define REVERSE_ENCODER_DIRECTION
 
 /**
  * SD CARD: ENABLE CRC
  *
  * Use CRC checks and retries on the SD communication.
  */
-//#define SD_CHECK_AND_RETRY
-
-/**
- * LCD Menu Items
- *
- * Disable all menus and only display the Status Screen, or
- * just remove some extraneous menu items to recover space.
- */
-//#define NO_LCD_MENUS
+#define REVERSE_MENU_DIRECTION
 //#define SLIM_LCD_MENUS
 
 //
