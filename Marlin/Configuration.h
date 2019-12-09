@@ -623,64 +623,72 @@
 //===========================================================================
 // Enable DELTA kinematics and most of the default configuration for Deltas
 
+// Enable DELTA kinematics and most of the default configuration for Deltas
 #define DELTA
 
 #if ENABLED(DELTA)
 
 // Make delta curves from many straight lines (linear interpolation).
 // This is a trade-off between visible corners (not enough segments)
-  #define DELTA_SEGMENTS_PER_SECOND 80
-#define DELTA_SEGMENTS_PER_SECOND 160
-  #define DELTA_HOME_TO_SAFE_ZONE
+// and processor overload (too many expensive sqrt calls).
+#define DELTA_SEGMENTS_PER_SECOND 80
+
 // After homing move down to a height where XY movement is unconstrained
-//#define DELTA_HOME_TO_SAFE_ZONE
+#define DELTA_HOME_TO_SAFE_ZONE
 
-  #define DELTA_CALIBRATION_MENU
+// Delta calibration menu
 // uncomment to add three points calibration menu option.
-    #define DELTA_AUTO_CALIBRATION
-
-//#define DELTA_CALIBRATION_MENU
+// See http://minow.blogspot.com/index.html#4918805519571907051
+#define DELTA_CALIBRATION_MENU
 
 // uncomment to add G33 Delta Auto-Calibration (Enable EEPROM_SETTINGS to store results)
-//#define DELTA_AUTO_CALIBRATION
-    #define DELTA_CALIBRATION_DEFAULT_POINTS 7
+#if ANYCUBIC_PROBE_VERSION > 0
+#define DELTA_AUTO_CALIBRATION
+#endif
+
 // NOTE NB all values for DELTA_* values MUST be floating point, so always have a decimal point in them
 
-    // Set the radius for the calibration probe points - max DELTA_PRINTABLE_RADIUS for non-eccentric probes
-    #define DELTA_CALIBRATION_RADIUS DELTA_PRINTABLE_RADIUS - MIN_PROBE_EDGE  // (mm)
 #if ENABLED(DELTA_AUTO_CALIBRATION)
 // set the default number of probe points : n*n (1 -> 7)
-#define DELTA_CALIBRATION_DEFAULT_POINTS 4
+#define DELTA_CALIBRATION_DEFAULT_POINTS 7
 #endif
-  #if ENABLED(ANYCUBIC_KOSSEL_PLUS)
-    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
-    #define DELTA_PRINTABLE_RADIUS 116.0  // (mm)
-    // Center-to-center distance of the holes in the diagonal push rods.
-    #define DELTA_DIAGONAL_ROD 267        // (mm)
-      // Horizontal offset from middle of printer to smooth rod center.
-    #define DELTA_SMOOTH_ROD_OFFSET 186   // (mm)
-    // Horizontal offset of the universal joints on the end effector.
-    #define DELTA_EFFECTOR_OFFSET 31      // (mm)
-    // Horizontal offset of the universal joints on the carriages.
-    #define DELTA_CARRIAGE_OFFSET 20.6    // (mm)
-    // Horizontal distance bridged by diagonal push rods when effector is centered.
-    #define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))          // (mm) Get this value from G33 auto calibrate
-  #else
-    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
-    #define DELTA_PRINTABLE_RADIUS 90.0   // (mm)
+
+#if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
+// Set the radius for the calibration probe points - max DELTA_PRINTABLE_RADIUS for non-eccentric probes
+#define DELTA_CALIBRATION_RADIUS DELTA_PRINTABLE_RADIUS - MIN_PROBE_EDGE // (mm)
+// Set the steprate for papertest probing
 #define PROBE_MANUALLY_STEP 0.05 // (mm)
-    // Horizontal distance bridged by diagonal push rods when effector is centered.
-    #define DELTA_RADIUS 97.0             // (mm) Get this value from G33 auto calibrate
-  #endif
 #endif
 
-  #define DELTA_HEIGHT 300.00             // (mm) Get this value from G33 auto calibrate
+#if ENABLED(ANYCUBIC_KOSSEL_PLUS)
+// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+#define DELTA_PRINTABLE_RADIUS 116.0 // (mm)
+// Center-to-center distance of the holes in the diagonal push rods.
+#define DELTA_DIAGONAL_ROD 267 // (mm)
+// Horizontal offset from middle of printer to smooth rod center.
+#define DELTA_SMOOTH_ROD_OFFSET 186 // (mm)
+// Horizontal offset of the universal joints on the end effector.
+#define DELTA_EFFECTOR_OFFSET 31 // (mm)
+// Horizontal offset of the universal joints on the carriages.
+#define DELTA_CARRIAGE_OFFSET 20.6 // (mm)
+// Horizontal distance bridged by diagonal push rods when effector is centered.
+#define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET - (DELTA_EFFECTOR_OFFSET) - (DELTA_CARRIAGE_OFFSET)) // (mm) Get this value from G33 auto calibrate
+#else
+// Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+#define DELTA_PRINTABLE_RADIUS 90.0 // (mm)
+// Center-to-center distance of the holes in the diagonal push rods.
+#define DELTA_DIAGONAL_ROD 218.0    // (mm)
+// Horizontal distance bridged by diagonal push rods when effector is centered.
+#define DELTA_RADIUS 97.0           // (mm) Get this value from G33 auto calibrate
+#endif
 
-  #define DELTA_ENDSTOP_ADJ { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
+// Distance between bed and nozzle Z home position
+#define DELTA_HEIGHT 300.00 // (mm) Get this value from G33 auto calibrate
+
 #define DELTA_ENDSTOP_ADJ \
   {                       \
     0.0, 0.0, 0.0         \
-  #define DELTA_TOWER_ANGLE_TRIM { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
+  } // Get these values from G33 auto calibrate
 
 // Trim adjustments for individual towers
 // tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
@@ -829,43 +837,34 @@
 #define XYZ_PULLEY_TEETH 16
 
 // delta speeds must be the same on xyz
-#define DEFAULT_XYZ_STEPS_PER_UNIT ((XYZ_FULL_STEPS_PER_ROTATION) * (XYZ_MICROSTEPS) / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH))
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 90 }  // default steps per unit for Kossel (GT2, 20 tooth)
+#define DEFAULT_XYZ_STEPS_PER_UNIT ((XYZ_FULL_STEPS_PER_ROTATION) * (XYZ_MICROSTEPS) / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH)) // 80
+#define DEFAULT_AXIS_STEPS_PER_UNIT                                                        \
+  {                                                                                        \
+    DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 96 \
+  } // default steps per unit for Kossel (GT2, 20 tooth)
 
 /**
  * Default Max Feed Rate (mm/s)
  * Override with M203
- *                                      X, Y, Z, E0 [, E1[, E2...]]
+ *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 200, 200, 200, 200 }
-
-//#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
-#if ENABLED(LIMITED_MAX_FR_EDITING)
-  #define MAX_FEEDRATE_EDIT_VALUES    { 600, 600, 10, 50 } // ...or, set your own edit limits
-#endif
+#define DEFAULT_MAX_FEEDRATE \
+  {                          \
+    100, 100, 100, 100       \
+  }
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
  * (Maximum start speed for accelerated moves)
  * Override with M201
- *                                      X, Y, Z, E0 [, E1[, E2...]]
+ *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_ACCELERATION      { 4000, 4000, 4000, 4000 }
-
-//#define LIMITED_MAX_ACCEL_EDITING     // Limit edit via M201 or LCD to DEFAULT_MAX_ACCELERATION * 2
-#if ENABLED(LIMITED_MAX_ACCEL_EDITING)
-  #define MAX_ACCEL_EDIT_VALUES       { 6000, 6000, 200, 20000 } // ...or, set your own edit limits
-#endif
+#define DEFAULT_MAX_ACCELERATION \
+  {                              \
+    3000, 3000, 3000, 3000       \
+  }
 
 /**
-//
-// Use Junction Deviation instead of traditional Jerk Limiting
-//
-//#define JUNCTION_DEVIATION
-#if ENABLED(JUNCTION_DEVIATION)
-  #define JUNCTION_DEVIATION_MM 0.02  // (mm) Distance from real junction edge
-#endif
-
  * Default Acceleration (change/s) change = mm/s
  * Override with M204
  *
@@ -873,43 +872,33 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-#define DEFAULT_ACCELERATION          2500    // X, Y, Z and E acceleration for printing moves
-#define CLASSIC_JERK
-#if ENABLED(CLASSIC_JERK)
-  #define DEFAULT_XJERK 10.0
+#define DEFAULT_ACCELERATION 3000         // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_RETRACT_ACCELERATION 3000 // E acceleration for retracts
+#define DEFAULT_TRAVEL_ACCELERATION 3000  // X, Y, Z acceleration for travel (non printing) moves
+
+//
+// Use Junction Deviation instead of traditional Jerk Limiting
+//
+//#define JUNCTION_DEVIATION
+#if ENABLED(JUNCTION_DEVIATION)
+#define JUNCTION_DEVIATION_MM 0.02 // (mm) Distance from real junction edge
+#endif
 
 /**
-
-  //#define LIMITED_JERK_EDITING        // Limit edit via M205 or LCD to DEFAULT_aJERK * 2
-  #if ENABLED(LIMITED_JERK_EDITING)
-    #define MAX_JERK_EDIT_VALUES { 20, 20, 0.6, 10 } // ...or, set your own edit limits
-  #endif
+ * Default Jerk (mm/s)
+ * Override with M205 X Y Z E
+ *
+ * "Jerk" specifies the minimum speed change that requires acceleration.
+ * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-#define CLASSIC_JERK
-#if ENABLED(CLASSIC_JERK)
-  #define DEFAULT_XJERK 10.0
-  #define DEFAULT_YJERK DEFAULT_XJERK
-  #define DEFAULT_ZJERK DEFAULT_XJERK // Must be same as XY for delta
-
-  //#define LIMITED_JERK_EDITING        // Limit edit via M205 or LCD to DEFAULT_aJERK * 2
-  #if ENABLED(LIMITED_JERK_EDITING)
-    #define MAX_JERK_EDIT_VALUES { 20, 20, 0.6, 10 } // ...or, set your own edit limits
-  #endif
+#if DISABLED(JUNCTION_DEVIATION)
+#define DEFAULT_XJERK 5.0
+#define DEFAULT_YJERK DEFAULT_XJERK
+#define DEFAULT_ZJERK DEFAULT_XJERK // Must be same as XY for delta
 #endif
 
-#define DEFAULT_EJERK    5.0  // May be used by Linear Advance
-
-/**
- * Junction Deviation Factor
- *
- * See:
- *   https://reprap.org/forum/read.php?1,739819
- *   http://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
- */
-#if DISABLED(CLASSIC_JERK)
-  #define JUNCTION_DEVIATION_MM 0.016 // (mm) Distance from real junction edge
-#endif
+#define DEFAULT_EJERK 5.0 // May be used by Linear Advance
 
 /**
  * S-Curve Acceleration
@@ -923,9 +912,7 @@
 
 //===========================================================================
 //============================= Z Probe Options =============================
-#if ANYCUBIC_PROBE_VERSION > 0
-  #define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
-#endif
+//===========================================================================
 // @section probes
 
 //
@@ -937,7 +924,9 @@
  *
  * Enable this option for a probe connected to the Z Min endstop pin.
  */
-// #define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+#if ANYCUBIC_PROBE_VERSION > 0
+#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+#endif
 
 /**
  * Z_MIN_PROBE_PIN
@@ -956,37 +945,37 @@
  *
  */
 //#define Z_MIN_PROBE_PIN 32 // Pin 32 is the RAMPS default
-#if ANYCUBIC_PROBE_VERSION == 0
-  #define PROBE_MANUALLY
-  #define MANUAL_PROBE_START_Z 1.5
-#endif
+
+/**
  * Probe Type
  *
  * Allen Key Probes, Servo Probes, Z-Sled Probes, FIX_MOUNTED_PROBE, etc.
  * Activate one of these to use Auto Bed Leveling below.
-#if ANYCUBIC_PROBE_VERSION > 0
  */
-#endif
 
 /**
  * The "Manual Probe" provides a means to do "Auto" Bed Leveling without a probe.
  * Use G29 repeatedly, adjusting the Z height at each point with movement commands
  * or (with LCD_BED_LEVELING) the LCD controller.
  */
-//#define PROBE_MANUALLY
-//#define MANUAL_PROBE_START_Z 0.2
+#if ANYCUBIC_PROBE_VERSION == 0
+#define PROBE_MANUALLY
+#define MANUAL_PROBE_START_Z 1.5
+#endif
 
 /**
  * A Fix-Mounted Probe either doesn't deploy or needs manual deployment.
  *   (e.g., an inductive probe or a nozzle-based probe-switch.)
  */
+#if ANYCUBIC_PROBE_VERSION > 0
 #define FIX_MOUNTED_PROBE
+#endif
 
 /**
  * Z Servo Probe, such as an endstop switch on a rotating arm.
  */
-//#define Z_PROBE_SERVO_NR 0       // Defaults to SERVO 0 connector.
-//#define Z_SERVO_ANGLES { 70, 0 } // Z Servo Deploy and Stow angles
+//#define Z_PROBE_SERVO_NR 0   // Defaults to SERVO 0 connector.
+//#define Z_SERVO_ANGLES {70,0}  // Z Servo Deploy and Stow angles
 
 /**
  * The BLTouch probe uses a Hall effect sensor and emulates a servo.
@@ -1411,9 +1400,9 @@
       // Number of subdivisions between probe points
       #define BILINEAR_SUBDIVISIONS 3
     #endif
- * Points to probe for all 3-point Leveling procedures.
- * Override if the automatically selected points are inadequate.
- */
+//  * Points to probe for all 3-point Leveling procedures.
+//  * Override if the automatically selected points are inadequate.
+
 #if EITHER(AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_UBL)
   #define PROBE_PT_1_X -40
   #define PROBE_PT_1_Y 60
@@ -1423,9 +1412,11 @@
   #define PROBE_PT_3_Y -70
 #endif
 
-/**
+
 
   #endif
+
+ /**
 
 #elif ENABLED(AUTO_BED_LEVELING_UBL)
 
@@ -1463,12 +1454,12 @@
  * Add a bed leveling sub-menu for ABL or MBL.
  * Include a guided procedure if manual probing is enabled.
  */
-//#define LCD_BED_LEVELING
+ //#define LCD_BED_LEVELING
 
 #if ENABLED(LCD_BED_LEVELING)
   #define MESH_EDIT_Z_STEP  0.025 // (mm) Step size while manually probing Z axis.
   #define LCD_PROBE_Z_RANGE 4     // (mm) Z Range centered on Z_MIN_POS for LCD Z adjustment
-  //#define MESH_EDIT_MENU        // Add a menu to edit mesh points
+ //#define MESH_EDIT_MENU        // Add a menu to edit mesh points
 #endif
 
 // Add a menu item to move between bed corners for manual bed adjustment
